@@ -1,5 +1,7 @@
-import { createFal } from '@ai-sdk/fal';
+import { fal } from "@fal-ai/client";
 
-export const fal = createFal({
-		apiKey: process.env.NEXT_PUBLIC_FAL_API_KEY, // optional, defaults to FAL_API_KEY environment variable
+fal.config({
+	credentials: process.env.NEXT_PUBLIC_FAL_API_KEY,
 });
+
+export const falClient = fal;
