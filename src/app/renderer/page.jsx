@@ -1,10 +1,12 @@
-import { Player } from "@remotion/player";
-import { MyComp } from "./remotion/MyComp";
+"use client";
 
-export const App = () => {
+import { Player } from "@remotion/player";
+import { MyComposition } from "@/remotion/Composition";
+
+const RendererPage = () => {
   return (
     <Player
-      component={MyComp}
+      component={MyComposition}
       inputProps={{ text: "World" }}
       durationInFrames={120}
       compositionWidth={1920}
@@ -18,3 +20,5 @@ export const App = () => {
     />
   );
 };
+
+export default RendererPage;
