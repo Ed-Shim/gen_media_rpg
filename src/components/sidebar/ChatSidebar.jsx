@@ -32,10 +32,26 @@ export default function ChatSidebar() {
         const newVisibleIndex = Math.floor((messages.length + 1) / 2) +  1;
         setVisibleIndex(newVisibleIndex);
 
+        //TODO: update this prompt to dynamic generation
+        const prompt = `
+            You are an AI storyteller guiding users through an interactive horror story.
+            
+            Here is the history of our story so far:
+            ${messages.map((msg, i) => {
+                if (i === 0) {
+                    return `Initial Scene: ${msg.content}\n`
+                }
+                return `${msg.role === 'user' ? 'User Action' : 'Scene'}: ${msg.content}\n`
+            }).join('\n')}
+
+            Based on this history and the user's latest input, generate the next scene of the story.
+            Make it atmospheric and engaging, building on previous events.
+            Describe what happens as a result of the user's action.
+            Keep the horror theme but avoid excessive gore or violence.
+            `
         // Generate response asynchronously
-        generateScene(currentMessage)
+        generateScene(prompt, currentMessage)
             .then(response => {
-                console.log(response);
                 addAssistantMessage(response.data.output);
             })
             .catch(error => {
@@ -52,7 +68,7 @@ export default function ChatSidebar() {
         {/* Conversation display area */}
         <div className="flex-1 overflow-y-auto flex flex-col">
           {/* Navigation controls - fixed at top */}
-          <div className="h-14 flex items-center justify-end gap-2 px-4 border-b border-gray-800">
+          <div className="h-12 flex-shrink-0 flex items-center justify-end gap-2 px-2 border-b border-gray-800 sticky top-0 bg-black">
             <Button 
               variant="ghost" 
               size="icon" 
