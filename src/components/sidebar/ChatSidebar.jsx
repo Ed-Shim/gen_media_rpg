@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AutoResizeTextarea } from "@/components/custom-ui/auto-resize-textarea";
 import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
@@ -11,36 +11,41 @@ export default function ChatSidebar() {
     const { messages, addUserMessage, addAssistantMessage, visibleIndex, setVisibleIndex, isLoading, setIsLoading } = useStoryGenerationStore();
     const [message, setMessage] = useState("");
 
-  const handleSubmit = async (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      
-      if (!message.trim()) return;
+    useEffect(() => {
+        const newVisibleIndex = Math.floor(messages.length / 2);
+        setVisibleIndex(newVisibleIndex);
+    }, [messages, setVisibleIndex]);
 
-      // Update UI state immediately
-      const currentMessage = message;
-      setMessage("");
-      addUserMessage(currentMessage);
-      setIsLoading(true);
+    const handleSubmit = async (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        
+        if (!message.trim()) return;
 
-      // Calculate new visible index based on messages length plus one to show the new user message
-      const newVisibleIndex = Math.floor((messages.length - 1) / 2) +  1;
-      setVisibleIndex(newVisibleIndex);
+        // Update UI state immediately
+        const currentMessage = message;
+        setMessage("");
+        addUserMessage(currentMessage);
+        setIsLoading(true);
 
-      // Generate response asynchronously
-      generateScene(currentMessage)
-        .then(response => {
-            console.log(response);
-            addAssistantMessage(response.data.output);
-        })
-        .catch(error => {
-          console.error("Error generating response:", error);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-  };
+        // Calculate new visible index based on messages length plus one to show the new user message
+        const newVisibleIndex = Math.floor((messages.length + 1) / 2) +  1;
+        setVisibleIndex(newVisibleIndex);
+
+        // Generate response asynchronously
+        generateScene(currentMessage)
+            .then(response => {
+                console.log(response);
+                addAssistantMessage(response.data.output);
+            })
+            .catch(error => {
+            console.error("Error generating response:", error);
+            })
+            .finally(() => {
+            setIsLoading(false);
+            });
+        }
+    };
 
   return (
     <div className="w-[30%] flex flex-col h-full border-l border-gray-800">
