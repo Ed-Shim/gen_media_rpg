@@ -1,6 +1,5 @@
-import { AutoResizeTextarea } from "@/components/custom-ui/auto-resize-textarea";
+"use client"
 import ChatSidebar from "@/components/sidebar/ChatSidebar";
-"use client";
 
 import { Player } from "@remotion/player";
 import { MyComposition } from "@/remotion/Composition";
