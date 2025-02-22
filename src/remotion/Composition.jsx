@@ -1,3 +1,11 @@
+import { AbsoluteFill, OffthreadVideo } from "remotion";
+
 export const MyComposition = ({ text }) => {
-  return <div>Hello {text}!</div>;
+  return (
+    <AbsoluteFill>
+      <div style={{ backgroundColor: "black", color: "white" }}>
+        Hello {text}!
+      </div>
+    </AbsoluteFill>
+  );
 };
