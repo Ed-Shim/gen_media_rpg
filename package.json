@@ -13,6 +13,8 @@
     "@ai-sdk/mistral": "^1.1.12",
     "@fal-ai/client": "^1.2.3",
     "@fal-ai/server-proxy": "^1.1.1",
+    "@remotion/cli": "^4.0.267",
+    "@remotion/player": "^4.0.267",
     "ai": "^4.1.45",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -21,6 +23,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-player": "^2.16.0",
+    "remotion": "^4.0.267",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7"
   },
