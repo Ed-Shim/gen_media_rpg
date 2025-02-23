@@ -18,24 +18,27 @@ export default function Home() {
       <div className="w-[70%] flex flex-col items-center justify-center bg-black">
         {sceneImage.length > 0 && visibleIndex < sceneImage.length ? (
           <div className="relative w-full h-full">
-            <Image
-              key={visibleIndex}
-              src={sceneImage[visibleIndex].image}
-              alt="Scene"
-              fill
-              style={{objectFit: 'contain'}}
-              priority
-            />
-            {/* <ReactPlayer
-              url={sceneImage[visibleIndex].video}
-              width="100%"
-              height="100%"
-              playing={true}
-              loop={true}
-              muted={true}
-              controls={false}
-              style={{objectFit: 'contain'}}
-            /> */}
+            {visibleIndex === 0 ? (
+              <ReactPlayer
+                url={sceneImage[visibleIndex].video}
+                width="100%"
+                height="100%"
+                playing={true}
+                loop={true}
+                muted={true}
+                controls={false}
+                style={{objectFit: 'contain'}}
+              />
+            ) : (
+              <Image
+                key={visibleIndex}
+                src={sceneImage[visibleIndex].image}
+                alt="Scene"
+                fill
+                style={{objectFit: 'contain'}}
+                priority
+              />
+            )}
             {characterBbox && (
               <div 
                 className="absolute hover:outline hover:outline-dotted hover:outline-white opacity-50 rounded-md cursor-pointer group transition-all duration-150"

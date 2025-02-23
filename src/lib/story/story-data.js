@@ -23,6 +23,7 @@ export const sceneTransitions = [
     {
         source_scene: 1,
         target_scene: 2,
+        is_ending: false,
         flags: [
             {
                 flag_id: "examine_desk",
@@ -36,6 +37,7 @@ export const sceneTransitions = [
     {
         source_scene: 2,
         target_scene: 3,
+        is_ending: true,
         flags: [
             {
                 flag_id: "mix_potion",
@@ -44,7 +46,7 @@ export const sceneTransitions = [
                 is_permanent: true
             }
         ],
-        description: "The successful completion of the potion causes a hidden panel in the wall to slide open, revealing an ornate passage leading to what appears to be a grand dining hall."
+        description: "The successful completion of the potion causes the laboratory to fill with a brilliant golden light. As the light fades, you find yourself transported to an opulent dining hall. The elderly alchemist's form shimmers and transforms, revealing her true identity as the long-lost Queen of the Realm. She smiles warmly, ready to share the truth about your own mysterious heritage and destiny."
     }
 ]
 
@@ -56,15 +58,6 @@ export const characterData = [
         description: "An elderly alchemist with a kind face and a gentle demeanor. Her silver hair is neatly tucked beneath a wide-brimmed hat adorned with mystical symbols. She wears an intricately embroidered robe in deep purple, its sleeves stained with various alchemical substances. Her eyes hold both wisdom and curiosity as she guides visitors through her mysterious craft.",
         emotional_state: "Patient and intrigued",
         player_impression: "Neutral but welcoming",
-        is_hostile: false
-    },
-    {
-        character_id: "noble_01", 
-        name: "Lord Blackthorn",
-        is_gender_male: true,
-        description: "A distinguished nobleman in his late fifties, dressed in rich velvet robes trimmed with gold. His salt-and-pepper hair is immaculately styled, and a signet ring gleams on his right hand. His posture and mannerisms speak of generations of nobility, while his sharp eyes suggest a keen and calculating mind.",
-        emotional_state: "Reserved and evaluating",
-        player_impression: "Cautiously diplomatic",
         is_hostile: false
     }
 ]

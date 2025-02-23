@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { characterData } from "../story/story-data";
 
 export const useStoryGenerationStore = create((set) => ({
     characterBbox: null,
@@ -7,20 +8,20 @@ export const useStoryGenerationStore = create((set) => ({
         {
             role: "assistant",
             content:`
-            The cabin radiates warmth and comfort, a refuge from the storm raging outside. Rain lashes against the windows, its rhythmic patter blending with the distant rumble of thunder. A crackling fireplace casts flickering shadows across rustic wooden walls lined with shelves brimming with ancient tomes and mysterious artifacts, their surfaces pulsing with an eerie luminescence.
+            The study is cloaked in dim light, the air thick with the scent of old paper and burning wood. Towering bookshelves line the walls, their ancient tomes stretching beyond sight. At the room’s center, a massive oak desk is cluttered with open books and scattered papers, illuminated by the warm glow of an ornate brass lamp. To the left, a crackling fireplace casts flickering shadows, its heat a quiet contrast to the rain tapping against the tall arched window behind the desk.
 
-            In the heart of this sanctuary, an elderly figure sits in a worn rocking chair, their wise eyes tracing the shifting light. Their long grey beard speaks of untold stories and guarded secrets. As you step inside, your rain-soaked cloak drips onto the wooden floor, merging with the cabin’s ambient sounds. The elder meets your gaze with a knowing smile, as if foreseeing the tale about to unfold.
+            From the entrance, you take in the scene—the looming shelves, the shifting firelight, the distant rumble of the storm outside. Shadows dance across the desk, and for a moment, the room feels alive, as if the very walls are steeped in secrets waiting to be uncovered.
             `,
         },
     ],
     narativeAudio:[{
-        narrate: "https://cdn.discordapp.com/attachments/1342924886468726825/1343064794843975802/GeneratedWithElevenlabs.mp3?ex=67bbea10&is=67ba9890&hm=4b5df678a6b49915daeef9eea05081415ea2a289f50cee76549f2588b621e236&", 
-        background:"https://cdn.discordapp.com/attachments/1342924886468726825/1343067287795666976/Generate_the_backgro.mp3?ex=67bbec62&is=67ba9ae2&hm=a43d349c00fb134d52601a0da9c7454f9fdf8b3cd6a7adde2ebc5684556d883c&"
+        narrate: "https://cdn.discordapp.com/attachments/1342924886468726825/1343157084014776361/ElevenLabs_2025-02-23T09_44_08_Grandpa_Spuds_Oxley_pvc_s50_sb75_se0_b_m2.mp3?ex=67bc4003&is=67baee83&hm=cc6d237a47343977f489712aa72337b1645a3f58bb752156d5acc0a974199791&", 
+        background:"https://cdn.discordapp.com/attachments/1342924886468726825/1343157616607629413/A_dimly_lit_study_wi_1.mp3?ex=67bc4082&is=67baef02&hm=52cb1d760e84e294f22a3625886dae81362fbc8e26be3cef996bc8aa468afd52&"
     }],
     setNarrativeAudio: (audio) => set((state) => ({ narativeAudio: [...state.narativeAudio, audio] })),
     sceneImage: [{
-        image: "https://fal.media/files/lion/vKkEr7UdVTHCwvis81voN_7fdedecabe3647a1a78af6e1ff30de10.jpg", 
-        video: "https://v3.fal.media/files/lion/u1A4N8b5_GBDsoSuV9jMD_output.mp4"
+        image: "https://fal.media/files/lion/orvE9a9ApQOERSZVFMQUb.jpeg", 
+        video: "https://v3.fal.media/files/kangaroo/-UTgsu5nGcDTGzpdjYAC6_output.mp4"
         }],
     addSceneImage: (image) => set((state) => ({ sceneImage: [...state.sceneImage, image] })),
     addUserMessage: (message) =>
@@ -59,26 +60,31 @@ export const useUIStateStore = create((set) => ({
 */
 
 export const useCharacterStateStore = create((set) => ({
-    character: null,
-    setCharacter: (character) => set({ character: character }),
-    updateCharacter: (character) => set({ character: character }),
-    removeCharacter: () => set({ character: null }),
+    characters: JSON.parse(JSON.stringify(characterData)),
+    activeCharacterId: null,
+    setActiveCharacterId: (characterId) => set({ activeCharacterId: characterId }),
+    updateCharacter: (characterId, updates) => 
+        set((state) => ({
+            characters: state.characters.map(char => 
+                char.character_id === characterId ? { ...char, ...updates } : char
+            )
+        })),
     updateCharacterHostileState: (characterId, hostileState) =>
         set((state) => ({
-            character: state.character?.character_id === characterId 
-                ? { ...state.character, is_hostile: hostileState }
-                : state.character
+            characters: state.characters.map(char =>
+                char.character_id === characterId ? { ...char, is_hostile: hostileState } : char
+            )
         })),
     updateCharacterEmotionalState: (characterId, emotionalState) =>
         set((state) => ({
-            character: state.character?.character_id === characterId
-                ? { ...state.character, emotional_state: emotionalState }
-                : state.character
+            characters: state.characters.map(char =>
+                char.character_id === characterId ? { ...char, emotional_state: emotionalState } : char
+            )
         })),
     updateCharacterPlayerImpression: (characterId, playerImpression) =>
         set((state) => ({
-            character: state.character?.character_id === characterId
-                ? { ...state.character, player_impression: playerImpression }
-                : state.character
-        })),
+            characters: state.characters.map(char =>
+                char.character_id === characterId ? { ...char, player_impression: playerImpression } : char
+            )
+        }))
 }));
