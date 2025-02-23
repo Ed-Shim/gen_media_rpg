@@ -1,5 +1,8 @@
 import { falClient } from "@/lib/api/fal"
 import elevClient from "@/lib/api/eleven"
+import { SchemaType } from "@google/generative-ai";
+import { characterData, storyScenes } from "@/lib/story/story-data"; //TODO: this needs to be fixed for improvements
+import { gemini } from "@/lib/api/gemini";
 
 // Helper to convert a blob to a base64 encoded data URL
 const blobToBase64 = async (blob) => {
@@ -8,46 +11,85 @@ const blobToBase64 = async (blob) => {
   return `data:audio/mp3;base64,${base64}`;
 };
 
-export const generateNextScene = async (messages, userMessage, lastImageUrl = null) => {
+export const generateNextScene = async (messages, userMessage, scene, sceneTransitions, lastImageUrl = null) => {
     try {
+        console.log('Generating next scene...');
+        // Get the last assistant message and combine with user message for context
+        const lastAssistantMessage = messages.filter(msg => msg.role === 'assistant').pop();
+        const userAction = `Previous scene: ${lastAssistantMessage?.content || ''}\n\nUser action: ${userMessage}`;
 
-        // Generate story prompt and response
-        const prompt = `
+        // First evaluate flags to check for scene transition
+        const flagEvaluation = await evaluateAllFlags(userAction, scene, sceneTransitions);
+        console.log('Flag evaluation status:', {
+            allSatisfied: flagEvaluation.allSatisfied,
+            targetSceneId: flagEvaluation.targetSceneId,
+            flags: flagEvaluation.flags
+        });
+        
+        // Build the base prompt
+        let prompt = `
             You are an AI storyteller guiding users through an interactive story.
-            
+
+            Current Scene Details:
+            Environment: ${scene.environment}
+            Character Position: ${scene.character_position}
+            ${scene.character_id ? `Character Present: ${characterData.find(c => c.character_id === scene.character_id)?.description}
+            Character's Emotional State: ${characterData.find(c => c.character_id === scene.character_id)?.emotional_state}` : ''}
+
             Here is the history of our story so far:
             ${messages.map((msg, i) => {
                 if (i === 0) return `Initial Scene: ${msg.content}\n`
                 return `${msg.role === 'user' ? 'User Action' : 'Scene Description'}: ${msg.content}\n`
             }).join('\n')}
+        `;
 
-            Based on this history and the user's latest input, generate the next scene of the story.
-            Make it atmospheric and engaging, building on previous events.
+        // If flags are satisfied, include transition information
+        if (flagEvaluation.allSatisfied) {
+            const transition = sceneTransitions.find(t => 
+                t.source_scene === scene.scene_id && t.target_scene === flagEvaluation.targetSceneId
+            );
+            const targetScene = storyScenes.find(s => s.scene_id === flagEvaluation.targetSceneId);
+            
+            prompt += `
+                The player's action has triggered a scene transition.
+                Transition Description: ${transition.description}
+                
+                New Scene Environment: ${targetScene.environment}
+                New Character Position: ${targetScene.character_position}
 
-            Focus on describing:
-            - The updated details of the environment.
-            - What the player can see, hear, smell, taste, and touch.
-            - Any subtle changes resulting from the player's action.
+                Describe how the scene transitions based on the player's action, incorporating the transition description,
+                and then establish the new scene.
+            `;
+        } else {
+            prompt += `
+                Based on this history and the user's latest input, generate the next scene of the story.
+                Make it atmospheric and engaging, building on previous events.
 
-            Avoid direct character dialogues.
-            Keep the narrative under 3 paragraphs maximum.
-        `
+                Focus on describing:
+                - The updated details of the environment, including any changes to the surroundings.
+                - The player's spatial relationship to objects and characters in the scene.
+                - What the player can see, hear, smell, taste, and touch from their position.
+                - Any subtle changes resulting from the player's action.
+                - If a character is present, their current position and visible reactions.
+
+                Avoid direct character dialogues.
+                Keep the narrative under 3 paragraphs maximum.
+                Ensure descriptions are from the player's perspective and clearly establish their position in the space.
+            `;
+        }
 
         console.log('Generating story response...');
-        // First generate the story response since we need it for audio and image
         const storyResponse = await generateScene(prompt, userMessage);
         const storyText = storyResponse.data.output;
         console.log('Story generated:', storyText);
 
         console.log('Generating audio and visual media in parallel...');
-        // Generate audio and visual media in parallel since they're independent
         const [audioResponse, visualMedia] = await Promise.all([
-            generateAudio(storyText), // Pass story text instead of user message
+            generateAudio(storyText),
             generateVisualMedia(storyText, lastImageUrl)
         ]);
         console.log('Audio and visual media generated successfully');
 
-        // Generate animated video from the static image
         console.log('Generating animated video...');
         const videoUrl = ""
         console.log('Animated video generated successfully');
@@ -57,12 +99,87 @@ export const generateNextScene = async (messages, userMessage, lastImageUrl = nu
             audio: audioResponse,
             imageUrl: visualMedia.imageUrl,
             videoUrl: videoUrl,
-            characters: visualMedia.characters
+            characters: visualMedia.characters,
+            activeSceneId: flagEvaluation.allSatisfied ? flagEvaluation.targetSceneId : scene.scene_id,
+            updatedFlags: flagEvaluation.flags
         };
 
     } catch (error) {
         console.error('Error generating scene:', error);
         throw error;
+    }
+}
+
+export const evaluateAllFlags = async (userMessage, scene, sceneTransitions) => {
+    // Get transitions for current scene
+    const transitions = sceneTransitions.filter(transition => transition.source_scene === scene.scene_id);
+    
+    // Get flags for all matching transitions
+    const sceneFlags = transitions[0].flags;
+    
+    // Evaluate each flag and get updated states
+    const flagEvaluations = await Promise.all(sceneFlags.map(async flag => {
+        // Skip evaluation if flag is already true
+        if (flag.is_true) {
+            return flag;
+        }
+        
+        const isSatisfied = await evaluateFlagScene(userMessage, flag);
+        return {
+            ...flag, // Include all original flag properties
+            is_true: isSatisfied // Update the is_true state based on evaluation
+        };
+    }));
+
+    // Check if all flags are satisfied
+    const allFlagsSatisfied = flagEvaluations.every(flag => flag.is_true);
+
+    return {
+        flags: flagEvaluations, // Return flags with their updated states
+        allSatisfied: allFlagsSatisfied,
+        targetSceneId: allFlagsSatisfied ? transitions[0].target_scene : null
+    };
+}
+
+export const evaluateFlagScene = async (userMessage, flag) => {
+    try {
+        console.log('Evaluating flag scene...');
+        
+        const schema = {
+            type: SchemaType.OBJECT,
+            properties: {
+                flagged: {
+                    type: SchemaType.BOOLEAN,
+                    description: "Whether the user action matches the flag action",
+                    nullable: false
+                }
+            },
+            required: ["flagged"]
+        };
+
+        const model = gemini.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            generationConfig: {
+                responseMimeType: "application/json", 
+                responseSchema: schema
+            }
+        });
+
+        const response = await model.generateContent(
+            `Given this user action: "${userMessage}"
+            
+            And this flag action: "${flag.action}"
+            
+            Evaluate if the user's action matches or accomplishes the flag action.
+            Return true if it does, false if it does not.`
+        );
+
+        const result = JSON.parse(response.response.text());
+        console.log('Flag evaluation complete');
+        return result.flagged;
+    } catch (error) {
+        console.error('Error evaluating flag scene:', error);
+        throw error; 
     }
 }
 
@@ -153,7 +270,8 @@ export const generateSpeechFileFromText = async (storyText) => {
 export const generateSoundEffectFileFromText = async (storyText) => {
     try {
         const reader = await elevClient.textToSoundEffects.convert({
-            text: storyText
+            text: storyText,
+            duration_seconds: 15
         });
         const chunks = [];
         for await (const chunk of reader) {
@@ -237,18 +355,19 @@ export const generateNextSceneImageUrl = async (prompt, imageUrl = null) => {
             });
         } else {
             console.log('Generating new image from scratch');
-            result = await falClient.subscribe("fal-ai/flux-pro/new", {
+            result = await falClient.subscribe("fal-ai/stable-diffusion-v35-large", {
                 input: {
                     prompt,
                     aspect_ratio: "16:9",
-                    image_size: "landscape_4_3",
-                    num_inference_steps: 10,
+                    image_size: "landscape_16_9",
                 },
                 pollInterval: 5000,
                 logs: true,
-                onQueueUpdate(update) {
-                    console.log("queue update", update);
-                }
+                onQueueUpdate: (update) => {
+                    if (update.status === "IN_PROGRESS") {
+                      update.logs.map((log) => log.message).forEach(console.log);
+                    }
+                },
             });
         }
 

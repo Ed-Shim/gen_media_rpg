@@ -3,7 +3,6 @@ import ChatSidebar from "@/components/sidebar/ChatSidebar";
 import Image from "next/image";
 import { useStoryGenerationStore, useUIStateStore } from "@/lib/state-mgmt/zustand";
 import dynamic from 'next/dynamic';
-
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false
 });
@@ -43,10 +42,10 @@ export default function Home() {
               <div 
                 className="absolute hover:outline hover:outline-dotted hover:outline-white opacity-50 rounded-md cursor-pointer group transition-all duration-150"
                 style={{
-                  left: `${(characterBbox.x / 1280) * 100}%`, // 1024 is standard width for landscape_4_3
-                  top: `${(1 - characterBbox.y / 720 ) * 100}%`, // 768 is standard height for landscape_4_3
-                  width: `${(1 - characterBbox.width / 1280) * 100}%`,
-                  height: `${(characterBbox.height / 720 - 1) * 100}%`
+                  left: `${characterBbox.x * 100}%`,
+                  top: `${characterBbox.y * 100}%`, 
+                  width: `${characterBbox.width * 100}%`,
+                  height: `${characterBbox.height * 100}%`
                 }}
                 onClick={() => setIsTextMode(false)}
               >

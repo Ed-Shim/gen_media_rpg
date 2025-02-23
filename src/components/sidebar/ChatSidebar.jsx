@@ -4,8 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import { AutoResizeTextarea } from "@/components/custom-ui/auto-resize-textarea";
 import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
-import { useStoryGenerationStore, useUIStateStore } from "@/lib/state-mgmt/zustand";
+import { useStoryGenerationStore, useUIStateStore, useSceneStateStore } from "@/lib/state-mgmt/zustand";
 import { HiPlay, HiStop } from "react-icons/hi2";
+import { getBboxPercentages } from "@/lib/utils";
 
 export default function ChatSidebar() {
   const {
@@ -30,7 +31,7 @@ export default function ChatSidebar() {
   const playAudioTracks = (narrateUrl, backgroundUrl) => {
     const narrationAudio = new Audio(narrateUrl);
     const backgroundAudio = new Audio(backgroundUrl);
-    backgroundAudio.volume = 0.2;
+    backgroundAudio.volume = 0.3;
     backgroundAudio.loop = true;
 
     audioRef.current = {
@@ -88,13 +89,16 @@ export default function ChatSidebar() {
     setVisibleIndex(newIndex);
 
     try {
+      const sceneState = useSceneStateStore.getState();
       const response = await fetch("/api/scene", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages,
           userMessage: currentMessage,
-          lastImageUrl: sceneImage[sceneImage.length - 1].image
+          scene: sceneState.scenes.find(scene => scene.scene_id === sceneState.activeSceneId),
+          lastImageUrl: sceneImage[sceneImage.length - 1].image,
+          sceneTransitions: sceneState.sceneTransitions
         })
       });
 
@@ -102,10 +106,28 @@ export default function ChatSidebar() {
 
       const data = await response.json();
 
+      // Always update flags for the current scene transition
+      const currentSceneId = sceneState.activeSceneId;
+      data.updatedFlags.forEach(flag => {
+        sceneState.updateSceneTransitionFlags(currentSceneId, flag.flag_id, {
+          is_true: flag.is_true
+        });
+      });
+
+      // Update active scene ID if changed
+      if (data.activeSceneId !== currentSceneId) {
+        sceneState.setActiveSceneId(data.activeSceneId);
+      }
+
       addAssistantMessage(data.story);
       setNarrativeAudio(data.audio);
       addSceneImage({ image: data.imageUrl, video: data.videoUrl });
-      setCharacterBbox(data.characters && data.characters.length ? data.characters[0] : null);
+      if (data.characters && data.characters.length) {
+        const bbox = await getBboxPercentages(data.characters[0], data.imageUrl);
+        setCharacterBbox(bbox);
+      } else {
+        setCharacterBbox(null);
+      }
 
       // Automatically play the new audio tracks
       playAudioTracks(data.audio.narrate, data.audio.background);

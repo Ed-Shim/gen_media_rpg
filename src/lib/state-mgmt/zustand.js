@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { characterData } from "../story/story-data";
+import { characterData, storyScenes, sceneTransitions } from "../story/story-data";
 
 export const useStoryGenerationStore = create((set) => ({
     characterBbox: null,
@@ -44,6 +44,26 @@ export const useStoryGenerationStore = create((set) => ({
 export const useUIStateStore = create((set) => ({
     isTextMode: true,
     setIsTextMode: (isTextMode) => set({ isTextMode }),
+}));
+
+
+export const useSceneStateStore = create((set) => ({
+    scenes: JSON.parse(JSON.stringify(storyScenes)),
+    sceneTransitions: JSON.parse(JSON.stringify(sceneTransitions)),
+    updateSceneTransitionFlags: (sceneId, flagId, updates) =>
+        set((state) => ({
+            sceneTransitions: state.sceneTransitions.map(transition =>
+                transition.source_scene === sceneId ? { ...transition, flags: transition.flags.map(flag => flag.flag_id === flagId ? { ...flag, ...updates } : flag) } : transition
+            )
+        })),
+    activeSceneId: 1,
+    setActiveSceneId: (sceneId) => set({ activeSceneId: sceneId }),
+    updateScene: (sceneId, updates) =>
+        set((state) => ({
+            scenes: state.scenes.map(scene =>
+                scene.scene_id === sceneId ? { ...scene, ...updates } : scene
+            )
+        }))
 }));
 
 

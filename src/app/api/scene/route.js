@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { messages, userMessage, lastImageUrl } = body;
+        const { messages, userMessage, lastImageUrl, scene, sceneTransitions } = body;
 
         if (!messages || !userMessage) {
             return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(request) {
             );
         }
 
-        const sceneData = await generateNextScene(messages, userMessage, lastImageUrl);
+        const sceneData = await generateNextScene(messages, userMessage, scene, sceneTransitions, lastImageUrl);
 
         return NextResponse.json(sceneData);
     } catch (error) {

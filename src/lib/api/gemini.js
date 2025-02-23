@@ -1,5 +1,3 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const gemini = createGoogleGenerativeAI({
-  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
-});
+export const gemini = new GoogleGenerativeAI( process.env.NEXT_PUBLIC_GEMINI_API_KEY);

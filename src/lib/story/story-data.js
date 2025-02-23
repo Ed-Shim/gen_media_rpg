@@ -10,12 +10,6 @@ export const storyScenes = [
         environment: "A mysterious alchemy laboratory with stone walls covered in phosphorescent moss. Wooden tables line the perimeter, holding bubbling potions in glass vials and mysterious apparatus. Shelves above display jars of preserved specimens and magical ingredients. A large copper cauldron sits in the center, emitting a faint blue glow. The air is thick with aromatic steam and dancing motes of magical energy. The elderly alchemist gestures to an empty workstation, where ingredients and instructions for a complex potion are laid out.",
         character_id: "alchemist_01",
         character_position: "You've descended the stone staircase and stand at the laboratory's entrance. The elderly alchemist is positioned twenty feet away, behind the glowing cauldron at the room's center. From your vantage point, you can clearly see all the workstations along the walls, though the specimens in the higher shelves are partially obscured by the drifting magical steam. The empty workstation the alchemist gestures to is about ten feet to your right, its surface clearly visible and accessible."
-    },
-    {
-        scene_id: 3,
-        environment: "An opulent dining hall with a vaulted ceiling supported by marble columns. A long mahogany table stretches down the center, set with fine silver and crystal. Ornate tapestries depicting mythical scenes adorn the walls between tall windows. Crystal chandeliers cast rainbow-like reflections across the polished floor. At the far end, a grand fireplace houses a roaring fire, its mantle decorated with intricate carvings.",
-        character_id: "noble_01",
-        character_position: "You stand at the dining hall's entrance, with the full grandeur of the forty-foot-long room before you. The noble sits at the far end of the table, his figure partially silhouetted by the fireplace behind him. From your position, you can see the entire length of the mahogany table, though the place settings at the far end are harder to distinguish in detail. The tapestries and windows line both walls within your peripheral vision, while the chandeliers hang at regular intervals overhead, casting their prismatic light across the scene."
     }
 ]
 
@@ -33,20 +27,6 @@ export const sceneTransitions = [
             }
         ],
         description: "As you examine the ancient texts scattered across the desk, you discover a hidden door behind one of the bookshelves. It creaks open to reveal a winding stone staircase descending into a mysterious laboratory below."
-    },
-    {
-        source_scene: 2,
-        target_scene: 3,
-        is_ending: true,
-        flags: [
-            {
-                flag_id: "mix_potion",
-                action: "Follow the alchemist's instructions to mix a mysterious potion",
-                is_true: false,
-                is_permanent: true
-            }
-        ],
-        description: "The successful completion of the potion causes the laboratory to fill with a brilliant golden light. As the light fades, you find yourself transported to an opulent dining hall. The elderly alchemist's form shimmers and transforms, revealing her true identity as the long-lost Queen of the Realm. She smiles warmly, ready to share the truth about your own mysterious heritage and destiny."
     }
 ]
 
