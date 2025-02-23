@@ -27,6 +27,7 @@ export default function ChatSidebar() {
   const { isTextMode, setIsTextMode } = useUIStateStore();
   const [message, setMessage] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [conversationMessages, setConversationMessages] = useState([]);
   const audioRef = useRef(null);
 
   // Helper function to create and play audio tracks
@@ -145,7 +146,7 @@ export default function ChatSidebar() {
   };
 
   if (!isTextMode) {
-    return <Conversationbar/>
+    return <Conversationbar conversationMessages={conversationMessages} setConversationMessages={setConversationMessages}/>
   }
 
   // Prepare filtered messages and related variables

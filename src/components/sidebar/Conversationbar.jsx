@@ -3,7 +3,7 @@ import { useUIStateStore, useCharacterStateStore } from "@/lib/state-mgmt/zustan
 import { useConversation } from "@11labs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const Conversationbar = () => {
+const Conversationbar = ({conversationMessages, setConversationMessages}) => {
     const { setIsTextMode } = useUIStateStore();
     const activeCharacterRef = useRef(null);
     activeCharacterRef.current = useCharacterStateStore((state) => {
@@ -12,7 +12,6 @@ const Conversationbar = () => {
         return activeChar;
     });
     const isConversationActive = useRef(false);
-    const [conversationMessages, setConversationMessages] = useState([]);
 
     useEffect(()=>{
         if(!isConversationActive.current){
@@ -159,13 +158,13 @@ const Conversationbar = () => {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col space-y-4 text-xs ">
           {conversationMessages.map((message, index) => (
-            <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={index} className={`flex ${message.source === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`${
-                message.role === 'user' 
+                message.source === 'user' 
                   ? 'bg-gray-600 text-white rounded-lg p-3 w-[80%] ml-auto'
                   : 'text-white p-3'
               }`}>
-                {message.content}
+                {message.message}
               </div>
             </div>
           ))}
