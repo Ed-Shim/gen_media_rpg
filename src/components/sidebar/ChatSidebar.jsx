@@ -31,7 +31,7 @@ export default function ChatSidebar() {
   const playAudioTracks = (narrateUrl, backgroundUrl) => {
     const narrationAudio = new Audio(narrateUrl);
     const backgroundAudio = new Audio(backgroundUrl);
-    backgroundAudio.volume = 0.3;
+    backgroundAudio.volume = 0.4;
     backgroundAudio.loop = true;
 
     audioRef.current = {
