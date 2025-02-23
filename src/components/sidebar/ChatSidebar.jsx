@@ -5,10 +5,10 @@ import { AutoResizeTextarea } from "@/components/custom-ui/auto-resize-textarea"
 import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
 import { useStoryGenerationStore } from "@/lib/state-mgmt/zustand";
-import { generateScene } from "@/agents/generateScene";
+import { generateNextScene } from "@/agents/generateScene";
 
-export default function ChatSidebar() {
-    const { messages, addUserMessage, addAssistantMessage, visibleIndex, setVisibleIndex, isLoading, setIsLoading } = useStoryGenerationStore();
+export default function ChatSidebar() { 
+    const { messages, addUserMessage, addAssistantMessage, visibleIndex, setVisibleIndex, isLoading, setIsLoading, sceneImage, addSceneImage } = useStoryGenerationStore();
     const [message, setMessage] = useState("");
 
     useEffect(() => {
@@ -31,28 +31,11 @@ export default function ChatSidebar() {
         // Calculate new visible index based on messages length plus one to show the new user message
         const newVisibleIndex = Math.floor((messages.length + 1) / 2) +  1;
         setVisibleIndex(newVisibleIndex);
-
-        //TODO: update this prompt to dynamic generation
-        const prompt = `
-            You are an AI storyteller guiding users through an interactive horror story.
-            
-            Here is the history of our story so far:
-            ${messages.map((msg, i) => {
-                if (i === 0) {
-                    return `Initial Scene: ${msg.content}\n`
-                }
-                return `${msg.role === 'user' ? 'User Action' : 'Scene'}: ${msg.content}\n`
-            }).join('\n')}
-
-            Based on this history and the user's latest input, generate the next scene of the story.
-            Make it atmospheric and engaging, building on previous events.
-            Describe what happens as a result of the user's action.
-            Keep the horror theme but avoid excessive gore or violence.
-            `
         // Generate response asynchronously
-        generateScene(prompt, currentMessage)
+        generateNextScene(messages, currentMessage, sceneImage[0])
             .then(response => {
-                addAssistantMessage(response.data.output);
+                addAssistantMessage(response.story);
+                addSceneImage(response.imageUrl);
             })
             .catch(error => {
             console.error("Error generating response:", error);
@@ -89,7 +72,7 @@ export default function ChatSidebar() {
             </Button>
           </div>
 
-          <div className="flex-1 space-y-3 text-sm">
+          <div className="flex-1 space-y-1.5 text-sm">
             {messages
               .filter(msg => msg.role !== 'system')
               .map((message, index) => {
@@ -114,6 +97,11 @@ export default function ChatSidebar() {
                   return (
                     <div key={index} className="text-white">
                       <div className="bg-gray-700 p-3 w-full">{message.content}</div>
+                      {isLoading && (
+                        <div className="text-gray-500 text-sm pl-3 pt-1 animate-pulse">
+                          Creating scene...
+                        </div>
+                      )}
                     </div>
                   );
                 }
