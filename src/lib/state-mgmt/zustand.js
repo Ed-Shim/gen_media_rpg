@@ -82,6 +82,7 @@ export const useSceneStateStore = create((set) => ({
 export const useCharacterStateStore = create((set) => ({
     characters: JSON.parse(JSON.stringify(characterData)),
     activeCharacterId: null,
+    setCharacter: (character) => set({ character }),
     setActiveCharacterId: (characterId) => set({ activeCharacterId: characterId }),
     updateCharacter: (characterId, updates) => 
         set((state) => ({

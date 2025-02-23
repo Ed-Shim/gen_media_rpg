@@ -34,8 +34,8 @@ export const characterData = [
     {
         character_id: "alchemist_01",
         name: "Eldred the Alchemist",
-        is_gender_male: false,
-        description: "An elderly alchemist with a kind face and a gentle demeanor. Her silver hair is neatly tucked beneath a wide-brimmed hat adorned with mystical symbols. She wears an intricately embroidered robe in deep purple, its sleeves stained with various alchemical substances. Her eyes hold both wisdom and curiosity as she guides visitors through her mysterious craft.",
+        is_gender_male: true,
+        description: "An elderly alchemist with a kind face and a gentle demeanor. His silver hair is neatly tucked beneath a wide-brimmed hat adorned with mystical symbols. He wears an intricately embroidered robe in deep purple, its sleeves stained with various alchemical substances. His eyes hold both wisdom and curiosity as he guides visitors through his mysterious craft.",
         emotional_state: "Patient and intrigued",
         player_impression: "Neutral but welcoming",
         is_hostile: false

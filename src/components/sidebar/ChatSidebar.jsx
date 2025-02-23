@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useStoryGenerationStore, useUIStateStore, useSceneStateStore } from "@/lib/state-mgmt/zustand";
 import { HiPlay, HiStop } from "react-icons/hi2";
 import { getBboxPercentages } from "@/lib/utils";
+import Conversationbar from "./Conversationbar";
 
 export default function ChatSidebar() {
   const {
@@ -139,17 +140,7 @@ export default function ChatSidebar() {
   };
 
   if (!isTextMode) {
-    return (
-      <div className="w-[30%] h-full border-l border-gray-800 flex flex-col justify-end p-4">
-        <Button
-          variant="outline"
-          className="w-full text-white border-gray-800 bg-black hover:bg-black hover:border-gray-600 hover:text-white hover:bg-gray-900"
-          onClick={() => setIsTextMode(true)}
-        >
-          End Conversation
-        </Button>
-      </div>
-    );
+    return <Conversationbar/>
   }
 
   // Prepare filtered messages and related variables

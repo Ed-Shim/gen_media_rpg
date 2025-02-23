@@ -110,6 +110,10 @@ export const generateNextScene = async (messages, userMessage, scene, sceneTrans
     }
 }
 
+export const updateSceneAndCharacterState = async () =>{
+    
+}
+
 export const evaluateAllFlags = async (userMessage, scene, sceneTransitions) => {
     // Get transitions for current scene
     const transitions = sceneTransitions.filter(transition => transition.source_scene === scene.scene_id);

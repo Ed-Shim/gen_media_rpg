@@ -38,9 +38,9 @@ export default function Home() {
                 priority
               />
             )}
-            {characterBbox && (
+            {characterBbox && visibleIndex === sceneImage.length - 1 && (
               <div 
-                className="absolute hover:outline hover:outline-dotted hover:outline-white opacity-50 rounded-md cursor-pointer group transition-all duration-150"
+                className="absolute hover:outline hover:outline-dotted hover:outline-white opacity-100 hover:bg-white hover:bg-opacity-20 rounded-md cursor-pointer group transition-all duration-150"
                 style={{
                   left: `${characterBbox.x * 100}%`,
                   top: `${characterBbox.y * 100}%`, 
@@ -49,7 +49,7 @@ export default function Home() {
                 }}
                 onClick={() => setIsTextMode(false)}
               >
-                <p className="text-white text-sm text-center p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Start Conversation</p>
+                <p className="text-white text-xs text-center p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Start Conversation</p>
               </div>
             )}
           </div>
