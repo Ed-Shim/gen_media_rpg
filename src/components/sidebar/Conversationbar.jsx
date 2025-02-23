@@ -1,25 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { useUIStateStore, useCharacterStateStore } from "@/lib/state-mgmt/zustand";
 import { useConversation } from "@11labs/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const Conversationbar = () => {
     const { setIsTextMode } = useUIStateStore();
     const activeCharacterRef = useRef(null);
-    const characters = useCharacterStateStore((state) => {
-        console.log("Characters state:", state.characters);
-        return state.characters;
-    });
-    const activeCharacterId = useCharacterStateStore((state) => {
-        console.log("Active character ID:", state.activeCharacterId);
-        return state.activeCharacterId;
-    });
     activeCharacterRef.current = useCharacterStateStore((state) => {
         const activeChar = state.characters.find((c) => c.character_id === state.activeCharacterId);
         console.log("Active character:", activeChar);
         return activeChar;
     });
     const isConversationActive = useRef(false);
+    const [conversationMessages, setConversationMessages] = useState([]);
 
     useEffect(()=>{
         if(!isConversationActive.current){
@@ -106,7 +99,10 @@ const Conversationbar = () => {
   const conversation = useConversation({
     onConnect: () => console.log("Connected"),
     onDisconnect: () => console.log("Disconnected"),
-    onMessage: (message) => console.log("Message:", message.message),
+    onMessage: (message) => {
+      console.log("Message:", message);
+      setConversationMessages(prevMessages => [...prevMessages, message]);
+    },
     onError: (error) => console.error("Error:", error),
     clientTools: {
         update_character:({emotional_state, player_impression, is_hostile }) =>{
@@ -159,17 +155,34 @@ const Conversationbar = () => {
   }, [conversation]);
 
   return (
-    <div className="w-[30%] h-full border-l border-gray-800 flex flex-col justify-end p-4">
-      <Button
-        variant="outline"
-        className="w-full text-white border-gray-800 bg-black hover:bg-black hover:border-gray-600 hover:text-white hover:bg-gray-900"
-        onClick={() => {
-          stopConversation();
-          setIsTextMode(true);
-        }}
-      >
-        End Conversation
-      </Button>
+    <div className="w-[30%] h-full border-l border-gray-800 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex flex-col space-y-4 text-xs ">
+          {conversationMessages.map((message, index) => (
+            <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`${
+                message.role === 'user' 
+                  ? 'bg-gray-600 text-white rounded-lg p-3 w-[80%] ml-auto'
+                  : 'text-white p-3'
+              }`}>
+                {message.content}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="p-4 border-t border-gray-800">
+        <Button
+          variant="outline"
+          className="w-full text-white border-gray-800 bg-black hover:bg-black hover:border-gray-600 hover:text-white hover:bg-gray-900"
+          onClick={() => {
+            stopConversation();
+            setIsTextMode(true);
+          }}
+        >
+          End Conversation
+        </Button>
+      </div>
     </div>
   );
 };
