@@ -4,11 +4,14 @@ export const useStoryGenerationStore = create((set) => ({
     messages: [
         {
             role: "assistant",
-            content:
-                "You find yourself standing before an imposing Victorian mansion, its windows dark and shuttered. The iron gates creak ominously in the wind.",
+            content:`
+            The cabin radiates warmth and comfort, a refuge from the storm raging outside. Rain lashes against the windows, its rhythmic patter blending with the distant rumble of thunder. A crackling fireplace casts flickering shadows across rustic wooden walls lined with shelves brimming with ancient tomes and mysterious artifacts, their surfaces pulsing with an eerie luminescence.
+
+            In the heart of this sanctuary, an elderly figure sits in a worn rocking chair, their wise eyes tracing the shifting light. Their long grey beard speaks of untold stories and guarded secrets. As you step inside, your rain-soaked cloak drips onto the wooden floor, merging with the cabin’s ambient sounds. The elder meets your gaze with a knowing smile, as if foreseeing the tale about to unfold.
+            `,
         },
     ],
-    sceneImage: ["https://fal.media/files/elephant/PF-nfB4utsLyvsUNA8XQ6_ea135ba95c6049c195554f8c4a94df46.jpg"],
+    sceneImage: ["https://fal.media/files/lion/vKkEr7UdVTHCwvis81voN_7fdedecabe3647a1a78af6e1ff30de10.jpg"],
     addSceneImage: (image) => set((state) => ({ sceneImage: [...state.sceneImage, image] })),
     addUserMessage: (message) =>
         set((state) => ({
