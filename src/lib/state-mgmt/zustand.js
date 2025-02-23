@@ -1,6 +1,8 @@
 import { create } from "zustand";
 
 export const useStoryGenerationStore = create((set) => ({
+    characterBbox: null,
+    setCharacterBbox: (bbox) => set({ characterBbox: bbox }),
     messages: [
         {
             role: "assistant",
@@ -16,7 +18,10 @@ export const useStoryGenerationStore = create((set) => ({
         background:"https://cdn.discordapp.com/attachments/1342924886468726825/1343067287795666976/Generate_the_backgro.mp3?ex=67bbec62&is=67ba9ae2&hm=a43d349c00fb134d52601a0da9c7454f9fdf8b3cd6a7adde2ebc5684556d883c&"
     }],
     setNarrativeAudio: (audio) => set((state) => ({ narativeAudio: [...state.narativeAudio, audio] })),
-    sceneImage: ["https://fal.media/files/lion/vKkEr7UdVTHCwvis81voN_7fdedecabe3647a1a78af6e1ff30de10.jpg"],
+    sceneImage: [{
+        image: "https://fal.media/files/lion/vKkEr7UdVTHCwvis81voN_7fdedecabe3647a1a78af6e1ff30de10.jpg", 
+        video: "https://v3.fal.media/files/lion/u1A4N8b5_GBDsoSuV9jMD_output.mp4"
+        }],
     addSceneImage: (image) => set((state) => ({ sceneImage: [...state.sceneImage, image] })),
     addUserMessage: (message) =>
         set((state) => ({
@@ -35,6 +40,12 @@ export const useStoryGenerationStore = create((set) => ({
     setIsLoading: (isLoading) => set({ isLoading: isLoading }),
 }));
 
+export const useUIStateStore = create((set) => ({
+    isTextMode: true,
+    setIsTextMode: (isTextMode) => set({ isTextMode }),
+}));
+
+
 /* 
     Character State Management
     Character has the following properties:
@@ -50,34 +61,24 @@ export const useStoryGenerationStore = create((set) => ({
 export const useCharacterStateStore = create((set) => ({
     character: null,
     setCharacter: (character) => set({ character: character }),
-    addCharacter: (character) =>
-        set((state) => ({ characters: [...state.characters, character] })),
-    removeCharacter: (character) =>
-        set((state) => ({
-            characters: state.characters.filter((c) => c !== character),
-        })),
+    updateCharacter: (character) => set({ character: character }),
+    removeCharacter: () => set({ character: null }),
     updateCharacterHostileState: (characterId, hostileState) =>
         set((state) => ({
-            characters: state.characters.map((c) =>
-                c.character_id === characterId
-                    ? { ...c, is_hostile: hostileState }
-                    : c,
-            ),
+            character: state.character?.character_id === characterId 
+                ? { ...state.character, is_hostile: hostileState }
+                : state.character
         })),
     updateCharacterEmotionalState: (characterId, emotionalState) =>
         set((state) => ({
-            characters: state.characters.map((c) =>
-                c.character_id === characterId
-                    ? { ...c, emotional_state: emotionalState }
-                    : c,
-            ),
+            character: state.character?.character_id === characterId
+                ? { ...state.character, emotional_state: emotionalState }
+                : state.character
         })),
     updateCharacterPlayerImpression: (characterId, playerImpression) =>
         set((state) => ({
-            characters: state.characters.map((c) =>
-                c.character_id === characterId
-                    ? { ...c, player_impression: playerImpression }
-                    : c,
-            ),
+            character: state.character?.character_id === characterId
+                ? { ...state.character, player_impression: playerImpression }
+                : state.character
         })),
 }));

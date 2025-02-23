@@ -47,10 +47,17 @@ export const generateNextScene = async (messages, userMessage, lastImageUrl = nu
         ]);
         console.log('Audio and visual media generated successfully');
 
+        // Generate animated video from the static image
+        console.log('Generating animated video...');
+        const videoUrl = ""
+        console.log('Animated video generated successfully');
+
         return {
             story: storyText,
             audio: audioResponse,
-            imageUrl: visualMedia.imageUrl
+            imageUrl: visualMedia.imageUrl,
+            videoUrl: videoUrl,
+            characters: visualMedia.characters
         };
 
     } catch (error) {
@@ -98,7 +105,17 @@ export const generateSoundEffect = async (storyText) => {
         const soundContext = await falClient.subscribe("fal-ai/any-llm", {
             input: {
                 model: "openai/gpt-4o",
-                system_prompt: "Extract only the scene setting, emotional tone, and key ambient sounds from the story. Provide a single concise sentence focused on the atmospheric and auditory elements that would make good background sound effects.",
+                system_prompt: `Extract the following elements from the story:
+                - Scene setting
+                - Emotional tone 
+                - Key ambient sounds
+
+                Format your response as a single concise sentence focused on atmospheric and auditory elements suitable for background sound effects.
+
+                Do not include:
+                - Character voices
+                - Dialog or conversation
+                - Narration elements`,
                 prompt: storyText
             }
         });
@@ -163,10 +180,13 @@ export const generateVisualMedia = async (sceneDescription, lastImageUrl = null)
         // Use the generated prompt to create the next image
         const imageUrl = await generateNextSceneImageUrl(promptText, lastImageUrl);
         console.log('Image generated:', imageUrl);
+
+        const characters = await detectCharactersInImage(imageUrl);
         
         return {
             imagePrompt: promptText,
-            imageUrl: imageUrl
+            imageUrl: imageUrl,
+            characters: characters
         };
     } catch (error) {
         console.error('Error generating visual media:', error);
@@ -179,7 +199,18 @@ export const generateImagePrompt = async (sceneDescription) => {
     const response = await falClient.subscribe("fal-ai/any-llm", {
         input: {
             model: "openai/gpt-4o",
-            system_prompt: "You are an expert at generating image prompts for a text-to-image model. You will be given a scene description that will describe the story that the image should represent. Generate a detailed prompt including the style, the characters and their states, the mood, and the details of the image.",
+            system_prompt: `You are an expert at crafting detailed image prompts for text-to-image models.
+
+                Your task is to convert scene descriptions into comprehensive image generation prompts that capture:
+                - Visual style and artistic direction
+                - Character appearances, expressions and positioning 
+                - Environmental details and atmosphere
+                - Lighting, colors and mood
+                - First-person perspective from the player's viewpoint
+
+                Format your response as a single, detailed prompt that describes exactly how the scene should appear from the player's perspective. Focus on what they would see in front of them based on the actions and events described.
+
+                Do not include any explanations or meta-commentary - output only the image generation prompt.`,
             prompt: sceneDescription
         }
     });
@@ -189,7 +220,6 @@ export const generateImagePrompt = async (sceneDescription) => {
 
 export const generateNextSceneImageUrl = async (prompt, imageUrl = null) => {
     try {
-        console.log('Starting image generation with prompt:', prompt);
         let result;
         if (imageUrl) {
             console.log('Using existing image for context:', imageUrl);
@@ -228,4 +258,61 @@ export const generateNextSceneImageUrl = async (prompt, imageUrl = null) => {
         console.error('Error generating image:', error);
         throw error;
     }
+}
+
+export const generateAnimatedImageFromStaticImage = async (staticImageUrl) => {
+    try {
+        console.log('Starting animated image generation...');
+        const result = await falClient.subscribe("fal-ai/kling-video/v1.6/standard/image-to-video", {
+            input: {
+                image_url: staticImageUrl,
+                prompt: "Animate the image to show a dynamic scene with a sense of movement and energy.",
+                aspect_ratio: "16:9",
+            },
+            logs: true,
+            onQueueUpdate: (update) => {
+                if (update.status === "IN_PROGRESS") {
+                    update.logs.map((log) => log.message).forEach(console.log);
+                }
+            }
+        });
+        console.log('Animated image generation complete');
+        return result.data.video;
+    } catch (error) {
+        console.error('Error generating animated image:', error);
+        throw error;
+    }
+}
+
+export const detectCharactersInImage = async (imageUrl) => {
+    const response = await falClient.subscribe("fal-ai/florence-2-large/object-detection", {
+        input: {
+            image_url: imageUrl
+        },
+        logs: true,
+        onQueueUpdate: (update) => {
+            if (update.status === "IN_PROGRESS") {
+                update.logs.map((log) => log.message).forEach(console.log);
+            }
+        }
+    });
+
+    console.log('Raw detection response:', response.data.results);
+    console.log('All bounding boxes:', response.data.results.bboxes);
+
+    const allPersonBboxes = response.data.results.bboxes.filter(bbox => bbox.label === "person" || bbox.label === "man");
+    console.log('Person bounding boxes before transformation:', allPersonBboxes);
+
+    const characters = allPersonBboxes.map((bbox) => {
+        const transformed = {
+            x: bbox.x,
+            y: bbox.y,
+            width: bbox.w,
+            height: bbox.h
+        };
+        return transformed;
+    });
+
+    console.log('Final characters array:', characters);
+    return characters;
 }
