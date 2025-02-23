@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { AutoResizeTextarea } from "@/components/custom-ui/auto-resize-textarea";
 import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
-import { useStoryGenerationStore, useUIStateStore, useSceneStateStore } from "@/lib/state-mgmt/zustand";
+import { useStoryGenerationStore, useUIStateStore, useSceneStateStore, useCharacterStateStore } from "@/lib/state-mgmt/zustand";
 import { HiPlay, HiStop } from "react-icons/hi2";
 import { getBboxPercentages } from "@/lib/utils";
 import Conversationbar from "./Conversationbar";
@@ -23,6 +23,7 @@ export default function ChatSidebar() {
     setNarrativeAudio,
     setCharacterBbox
   } = useStoryGenerationStore();
+  const { setActiveCharacterId } = useCharacterStateStore.getState();
   const { isTextMode, setIsTextMode } = useUIStateStore();
   const [message, setMessage] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
@@ -118,6 +119,10 @@ export default function ChatSidebar() {
       // Update active scene ID if changed
       if (data.activeSceneId !== currentSceneId) {
         sceneState.setActiveSceneId(data.activeSceneId);
+        
+        // Update active character ID based on new scene
+        const newScene = sceneState.scenes.find(scene => scene.scene_id === data.activeSceneId);
+        setActiveCharacterId(newScene.character_id);
       }
 
       addAssistantMessage(data.story);
