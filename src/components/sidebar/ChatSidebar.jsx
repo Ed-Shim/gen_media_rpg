@@ -1,48 +1,118 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AutoResizeTextarea } from "@/components/custom-ui/auto-resize-textarea";
 import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
 import { useStoryGenerationStore } from "@/lib/state-mgmt/zustand";
 import { generateNextScene } from "@/agents/generateScene";
+import { HiPlay, HiStop } from "react-icons/hi2";
 
 export default function ChatSidebar() { 
-    const { messages, addUserMessage, addAssistantMessage, visibleIndex, setVisibleIndex, isLoading, setIsLoading, sceneImage, addSceneImage } = useStoryGenerationStore();
+    const { messages, addUserMessage, addAssistantMessage, visibleIndex, setVisibleIndex, isLoading, setIsLoading, sceneImage, addSceneImage, setNarrativeAudio, narativeAudio } = useStoryGenerationStore();
     const [message, setMessage] = useState("");
+    const [isPlaying, setIsPlaying] = useState(false);
+    const audioRef = useRef(null);
 
     useEffect(() => {
         const newVisibleIndex = Math.floor(messages.length / 2);
         setVisibleIndex(newVisibleIndex);
     }, [messages, setVisibleIndex]);
 
+    const handlePlayback = () => {
+        const { narativeAudio } = useStoryGenerationStore.getState();
+        if (visibleIndex >= narativeAudio.length) {
+            return;
+        }
+
+        if (!isPlaying) {
+            // Create new audio references for narration and background
+            const narrationAudio = new Audio(narativeAudio[visibleIndex].narrate);
+            const backgroundAudio = new Audio(narativeAudio[visibleIndex].background);
+            
+            // Set background volume to 20%
+            backgroundAudio.volume = 0.2;
+            backgroundAudio.loop = true;
+
+            // Store both audio references
+            audioRef.current = {
+                narration: narrationAudio,
+                background: backgroundAudio
+            };
+            
+            // Play both tracks
+            narrationAudio.play();
+            backgroundAudio.play();
+
+            // When narration ends, stop background and reset state
+            narrationAudio.addEventListener('ended', () => {
+                backgroundAudio.pause();
+                backgroundAudio.currentTime = 0;
+                setIsPlaying(false);
+            });
+        } else {
+            // Stop both audio tracks
+            if (audioRef.current) {
+                audioRef.current.narration.pause();
+                audioRef.current.narration.currentTime = 0;
+                audioRef.current.background.pause();
+                audioRef.current.background.currentTime = 0;
+            }
+        }
+        
+        setIsPlaying(!isPlaying);
+    };
+
     const handleSubmit = async (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        
-        if (!message.trim()) return;
+            e.preventDefault();
+            
+            if (!message.trim()) return;
 
-        // Update UI state immediately
-        const currentMessage = message;
-        setMessage("");
-        addUserMessage(currentMessage);
-        setIsLoading(true);
+            // Update UI state immediately
+            const currentMessage = message;
+            setMessage("");
+            addUserMessage(currentMessage);
+            setIsLoading(true);
 
-        // Calculate new visible index based on messages length plus one to show the new user message
-        const newVisibleIndex = Math.floor((messages.length + 1) / 2) +  1;
-        setVisibleIndex(newVisibleIndex);
-        // Generate response asynchronously
-        generateNextScene(messages, currentMessage, sceneImage[0])
-            .then(response => {
-                addAssistantMessage(response.story);
-                addSceneImage(response.imageUrl);
-            })
-            .catch(error => {
-            console.error("Error generating response:", error);
-            })
-            .finally(() => {
-            setIsLoading(false);
-            });
+            // Calculate new visible index based on messages length plus one to show the new user message
+            const newVisibleIndex = Math.floor((messages.length + 1) / 2) + 1;
+            setVisibleIndex(newVisibleIndex);
+
+            try {
+                // Call API endpoint
+                const response = await fetch('/api/scene', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages,
+                        userMessage: currentMessage,
+                        lastImageUrl: sceneImage[0]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate scene');
+                }
+
+                const data = await response.json();
+
+                // Update story text
+                addAssistantMessage(data.story);
+                
+                // Update audio state  
+                setNarrativeAudio(data.audio);
+                
+                // Update image
+                addSceneImage(data.imageUrl);
+
+            } catch (error) {
+                console.error("Error generating response:", error);
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -51,25 +121,36 @@ export default function ChatSidebar() {
         {/* Conversation display area */}
         <div className="flex-1 overflow-y-auto flex flex-col">
           {/* Navigation controls - fixed at top */}
-          <div className="h-12 flex-shrink-0 flex items-center justify-end gap-2 px-2 border-b border-gray-800 sticky top-0 bg-black">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-white hover:bg-gray-800 hover:text-white [&_svg]:size-5"
-              onClick={() => setVisibleIndex(visibleIndex - 1)}
-              disabled={visibleIndex === 0}
+          <div className="h-12 flex-shrink-0 flex items-center justify-between gap-2 px-2 border-b border-gray-800 sticky top-0 bg-black">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-gray-800 hover:text-white [&_svg]:size-5 [&_svg]:opacity-60"
+              onClick={handlePlayback}
+              disabled={visibleIndex >= useStoryGenerationStore.getState().narativeAudio.length}
             >
-              <HiChevronUp className="h-4 w-4" />
+              {isPlaying ? <HiStop className="h-4 w-4" /> : <HiPlay className="h-4 w-4" />}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-white hover:bg-gray-800 hover:text-white [&_svg]:size-5"
-              onClick={() => setVisibleIndex(visibleIndex + 1)}
-              disabled={visibleIndex >= Math.ceil((messages.filter(msg => msg.role !== 'system').length - 1) / 2)}
-            >
-              <HiChevronDown className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white hover:bg-gray-800 hover:text-white [&_svg]:size-5"
+                onClick={() => setVisibleIndex(visibleIndex - 1)}
+                disabled={visibleIndex === 0}
+              >
+                <HiChevronUp className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white hover:bg-gray-800 hover:text-white [&_svg]:size-5"
+                onClick={() => setVisibleIndex(visibleIndex + 1)}
+                disabled={visibleIndex >= Math.ceil((messages.filter(msg => msg.role !== 'system').length - 1) / 2)}
+              >
+                <HiChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex-1 space-y-1.5 text-sm">
@@ -83,7 +164,9 @@ export default function ChatSidebar() {
                 if (visibleIndex === 0) {
                   return index === 0 && message.role === 'assistant' ? (
                     <div key={index} className="text-white">
-                      <div className="w-full p-3">{message.content}</div>
+                      <div className="w-full p-3">
+                        {message.content}
+                      </div>
                     </div>
                   ) : null;
                 }
@@ -112,8 +195,10 @@ export default function ChatSidebar() {
                     {message.role === 'user' && (
                       <div className="bg-gray-700 p-3 w-full">{message.content}</div>
                     )}
-                    {message.role === 'assistant' && (
-                      <div className="w-full p-3">{message.content}</div>
+                    {message.role === 'assistant' && (  
+                        <div className="w-full p-3">  
+                          {message.content}
+                        </div>
                     )}
                   </div>
                 );

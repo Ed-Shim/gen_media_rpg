@@ -11,6 +11,11 @@ export const useStoryGenerationStore = create((set) => ({
             `,
         },
     ],
+    narativeAudio:[{
+        narrate: "https://cdn.discordapp.com/attachments/1342924886468726825/1343064794843975802/GeneratedWithElevenlabs.mp3?ex=67bbea10&is=67ba9890&hm=4b5df678a6b49915daeef9eea05081415ea2a289f50cee76549f2588b621e236&", 
+        background:"https://cdn.discordapp.com/attachments/1342924886468726825/1343067287795666976/Generate_the_backgro.mp3?ex=67bbec62&is=67ba9ae2&hm=a43d349c00fb134d52601a0da9c7454f9fdf8b3cd6a7adde2ebc5684556d883c&"
+    }],
+    setNarrativeAudio: (audio) => set((state) => ({ narativeAudio: [...state.narativeAudio, audio] })),
     sceneImage: ["https://fal.media/files/lion/vKkEr7UdVTHCwvis81voN_7fdedecabe3647a1a78af6e1ff30de10.jpg"],
     addSceneImage: (image) => set((state) => ({ sceneImage: [...state.sceneImage, image] })),
     addUserMessage: (message) =>
@@ -35,6 +40,7 @@ export const useStoryGenerationStore = create((set) => ({
     Character has the following properties:
     - character_id
     - name
+    - is_gender_male
     - description
     - emotional_state
     - player_impression
@@ -42,8 +48,8 @@ export const useStoryGenerationStore = create((set) => ({
 */
 
 export const useCharacterStateStore = create((set) => ({
-    characters: [],
-    setCharacters: (characters) => set({ characters: characters }),
+    character: null,
+    setCharacter: (character) => set({ character: character }),
     addCharacter: (character) =>
         set((state) => ({ characters: [...state.characters, character] })),
     removeCharacter: (character) =>

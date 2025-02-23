@@ -21,7 +21,7 @@ export default function Home() {
             />
           </div>
         ) : (
-          <h1 className="text-white text-2xl animate-pulse">
+          <h1 className="text-gray-300 text-2xl animate-pulse">
             {sceneImage.length === 0 ? "Take your first action" : "Generating next scene..."}
           </h1>
         )}
